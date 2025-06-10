@@ -19,6 +19,18 @@ export const contactOperations: INodeProperties[] = [
 				action: 'Create a contact',
 			},
 			{
+				name: 'Delete',
+				value: 'delete',
+				description: 'Delete a contact',
+				action: 'Delete a contact',
+			},
+			{
+				name: 'Get',
+				value: 'get',
+				description: 'Get a contact',
+				action: 'Get a contact',
+			},
+			{
 				name: 'Update',
 				value: 'update',
 				description: 'Update contact properties',
@@ -30,6 +42,23 @@ export const contactOperations: INodeProperties[] = [
 ];
 
 export const contactFields: INodeProperties[] = [
+	/* -------------------------------------------------------------------------- */
+	/*                                  contact:get                               */
+	/* -------------------------------------------------------------------------- */
+	{
+		displayName: 'Contact ID',
+		name: 'rowId',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['data_contact'],
+				operation: ['get'],
+			},
+		},
+		default: '',
+		description: 'Unique identifier for a particular company',
+	},
 
 	/* -------------------------------------------------------------------------- */
 	/*                                contact:create                               */
@@ -100,11 +129,29 @@ export const contactFields: INodeProperties[] = [
 	},
 
 	/* -------------------------------------------------------------------------- */
+	/*                                  contact:delete                               */
+	/* -------------------------------------------------------------------------- */
+	{
+		displayName: 'Contact ID',
+		name: 'rowId',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['data_contact'],
+				operation: ['delete'],
+			},
+		},
+		default: '',
+		description: 'ID of contact to delete',
+	},
+
+	/* -------------------------------------------------------------------------- */
 	/*                                contact:update                               */
 	/* -------------------------------------------------------------------------- */
 	{
 		displayName: 'Contact ID',
-		name: 'contactId',
+		name: 'rowId',
 		type: 'string',
 		required: true,
 		displayOptions: {

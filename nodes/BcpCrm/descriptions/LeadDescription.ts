@@ -1,6 +1,6 @@
 import type { INodeProperties } from 'n8n-workflow';
 
-export const companyOperations: INodeProperties[] = [
+export const leadOperations: INodeProperties[] = [
 	{
 		displayName: 'Operation',
 		name: 'operation',
@@ -8,51 +8,52 @@ export const companyOperations: INodeProperties[] = [
 		noDataExpression: true,
 		displayOptions: {
 			show: {
-				resource: ['data_account'],
+				resource: ['data_lead'],
 			},
 		},
 		options: [
 			{
 				name: 'Create',
 				value: 'create',
-				description: 'Create a new company',
-				action: 'Create a company',
+				description: 'Create a new lead',
+				action: 'Create a lead',
 			},
 			{
 				name: 'Delete',
 				value: 'delete',
-				description: 'Delete a company',
-				action: 'Delete a company',
+				description: 'Delete a lead',
+				action: 'Delete a lead',
 			},
 			{
 				name: 'Get',
 				value: 'get',
-				description: 'Get a company',
-				action: 'Get a company',
+				description: 'Get a lead',
+				action: 'Get a lead',
 			},
 			{
 				name: 'Update',
 				value: 'update',
-				description: 'Update company properties',
-				action: 'Update a company',
+				description: 'Update lead properties',
+				action: 'Update a lead',
 			},
 		],
 		default: 'create',
 	},
 ];
 
-export const companyFields: INodeProperties[] = [
+export const leadFields: INodeProperties[] = [
+
 	/* -------------------------------------------------------------------------- */
-	/*                                  company:get                               */
+	/*                                  lead:get                               */
 	/* -------------------------------------------------------------------------- */
 	{
-		displayName: 'Company ID',
+		displayName: 'Lead ID',
 		name: 'rowId',
 		type: 'string',
 		required: true,
 		displayOptions: {
 			show: {
-				resource: ['data_account'],
+				resource: ['data_lead'],
 				operation: ['get'],
 			},
 		},
@@ -61,8 +62,9 @@ export const companyFields: INodeProperties[] = [
 	},
 
 	/* -------------------------------------------------------------------------- */
-	/*                                company:create                               */
+	/*                                lead:create                               */
 	/* -------------------------------------------------------------------------- */
+
 	{
 		displayName: 'Additional Fields',
 		name: 'additionalFields',
@@ -71,7 +73,7 @@ export const companyFields: INodeProperties[] = [
 		default: {},
 		displayOptions: {
 			show: {
-				resource: ['data_account'],
+				resource: ['data_lead'],
 				operation: ['create'],
 			},
 		},
@@ -81,21 +83,18 @@ export const companyFields: INodeProperties[] = [
 				name: 'address',
 				type: 'string',
 				default: '',
-				description: 'Company address',
+				description: 'Lead address',
 			},
 			{
-				displayName: 'Country',
-				name: 'code_country',
-				type: 'string',
-				default: '',
-				description: 'Company country',
-			},
-			{
-				displayName: 'Domain',
-				name: 'domain',
-				type: 'string',
-				default: '',
-				description: 'Company domain',
+				displayName: 'Company Names or ID',
+				name: 'account',
+				type: 'multiOptions',
+				typeOptions: {
+					loadOptionsMethod: 'getCompanies',
+					loadOptionsDependsOn: ['resource'],
+				},
+				default: [], // Initially selected options
+				description: 'Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 			},
 			{
 				displayName: 'Email',
@@ -103,66 +102,67 @@ export const companyFields: INodeProperties[] = [
 				type: 'string',
 				placeholder: 'name@email.com',
 				default: '',
-				description: 'Company email',
+				description: 'Lead email',
 			},
 			{
-				displayName: 'Name',
+				displayName: 'First Name',
+				name: 'surname',
+				type: 'string',
+				default: '',
+				description: 'Lead first name',
+			},
+			{
+				displayName: 'Last Name',
 				name: 'name',
 				type: 'string',
 				default: '',
-				description: 'Company name',
+				description: 'Lead last name',
 			},
 			{
 				displayName: 'Phone',
 				name: 'phones',
 				type: 'string',
 				default: '',
-				description: 'Company phone',
+				description: 'Lead phone',
 			},
-			{
-				displayName: 'Tax Code',
-				name: 'tax_code',
-				type: 'string',
-				default: '',
-				description: 'Company tax code',
-			},
+
 		],
 	},
 
 	/* -------------------------------------------------------------------------- */
-	/*                                  company:delete                               */
+	/*                                  lead:delete                               */
 	/* -------------------------------------------------------------------------- */
 	{
-		displayName: 'Company ID',
+		displayName: 'Lead ID',
 		name: 'rowId',
 		type: 'string',
 		required: true,
 		displayOptions: {
 			show: {
-				resource: ['data_account'],
+				resource: ['data_lead'],
 				operation: ['delete'],
 			},
 		},
 		default: '',
-		description: 'ID of company to delete',
+		description: 'ID of lead to delete',
 	},
 
 	/* -------------------------------------------------------------------------- */
-	/*                                company:update                               */
+	/*                                lead:update                               */
 	/* -------------------------------------------------------------------------- */
 	{
-		displayName: 'Company ID',
+		displayName: 'Lead ID',
 		name: 'rowId',
 		type: 'string',
 		required: true,
 		displayOptions: {
 			show: {
-				resource: ['data_account'],
+				resource: ['data_lead'],
 				operation: ['update'],
 			},
 		},
 		default: '',
-		description: 'Unique identifier for a particular company',
+		description: 'Unique identifier for a particular lead',
 	},
 	{
 		displayName: 'Additional Fields',
@@ -172,7 +172,7 @@ export const companyFields: INodeProperties[] = [
 		default: {},
 		displayOptions: {
 			show: {
-				resource: ['data_account'],
+				resource: ['data_lead'],
 				operation: ['update'],
 			},
 		},
@@ -182,21 +182,18 @@ export const companyFields: INodeProperties[] = [
 				name: 'address',
 				type: 'string',
 				default: '',
-				description: 'Company address',
+				description: 'Lead address',
 			},
 			{
-				displayName: 'Country',
-				name: 'code_country',
-				type: 'string',
-				default: '',
-				description: 'Company country',
-			},
-			{
-				displayName: 'Domain',
-				name: 'domain',
-				type: 'string',
-				default: '',
-				description: 'Company domain',
+				displayName: 'Company Names or ID',
+				name: 'account',
+				type: 'multiOptions',
+				typeOptions: {
+					loadOptionsMethod: 'getCompanies',
+					loadOptionsDependsOn: ['resource'],
+				},
+				default: [], // Initially selected options
+				description: 'Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 			},
 			{
 				displayName: 'Email',
@@ -204,29 +201,30 @@ export const companyFields: INodeProperties[] = [
 				type: 'string',
 				placeholder: 'name@email.com',
 				default: '',
-				description: 'Company email',
+				description: 'Lead email',
 			},
 			{
-				displayName: 'Name',
+				displayName: 'First Name',
+				name: 'surname',
+				type: 'string',
+				default: '',
+				description: 'Lead first name',
+			},
+			{
+				displayName: 'Last Name',
 				name: 'name',
 				type: 'string',
 				default: '',
-				description: 'Company name',
+				description: 'Lead last name',
 			},
 			{
 				displayName: 'Phone',
 				name: 'phones',
 				type: 'string',
 				default: '',
-				description: 'Company phone',
+				description: 'Lead phone',
 			},
-			{
-				displayName: 'Tax Code',
-				name: 'tax_code',
-				type: 'string',
-				default: '',
-				description: 'Company tax code',
-			},
+
 		],
 	},
 ];

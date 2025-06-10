@@ -1,4 +1,5 @@
 import {
+	IDataObject,
 	IExecuteFunctions,
 	ILoadOptionsFunctions,
 	INodeExecutionData,
@@ -6,21 +7,24 @@ import {
 	INodeType,
 	INodeTypeDescription,
 	NodeConnectionType,
+	NodeOperationError,
 } from 'n8n-workflow';
 import { contactFields, contactOperations } from './descriptions/ContactDescription';
 import { companyFields, companyOperations } from './descriptions/CompanyDescription';
+import { dealFields, dealOperations } from './descriptions/DealDescription';
+import { leadFields, leadOperations } from './descriptions/LeadDescription';
 
 export class BcpCrm implements INodeType {
 	// @ts-ignore
 	description: INodeTypeDescription = {
-		displayName: 'BCP Crm',
+		displayName: 'BCP CRM',
 		name: 'bcpCrm',
 		subtitle: '={{ $parameter["operation"] + ": " + $parameter["resource"] }}',
 		icon: 'file:bcpcrm.svg', // Optional: Add a custom icon in the nodes/ directory
 		group: ['transform'],
 		version: 1,
 		description: 'Interact with BCP CRM API',
-		defaults: {name: 'BCP Crm'},
+		defaults: {name: 'BCP CRM'},
 		inputs: [NodeConnectionType.Main],
 		outputs: [NodeConnectionType.Main],
 		credentials: [
@@ -39,8 +43,8 @@ export class BcpCrm implements INodeType {
 				options: [
 					{name: 'Company', value: 'data_account'},
 					{name: 'Contact', value: 'data_contact'},
-					{name: 'Lead', value: 'data_lead'},
 					{name: 'Deal', value: 'data_deal'},
+					{name: 'Lead', value: 'data_lead'},
 				],
 				default: 'data_account',
 			},
@@ -50,6 +54,12 @@ export class BcpCrm implements INodeType {
 			// CONTACT
 			...contactOperations,
 			...contactFields,
+			// DEAL
+			...dealOperations,
+			...dealFields,
+			// LEAD
+			...leadOperations,
+			...leadFields,
 		],
 	};
 
@@ -86,10 +96,10 @@ export class BcpCrm implements INodeType {
 			async getPipelines(this: ILoadOptionsFunctions) {
 				const returnData: INodePropertyOptions[] = [];
 				const credentials = await this.getCredentials('bcpApi');
-				// Get the current resource
+				const target = 'pipeline';
 
-				const method = 'GET'
-				let path = '/api/bizfly/crm/base-table/options?table=data_deal&target=pipeline';
+				const method = 'GET';
+				const path = `/api/bizfly/crm/base-table/options?table=data_deal&target=${target}`;
 
 				const response = await this.helpers.httpRequest({
 					method: method,
@@ -101,7 +111,7 @@ export class BcpCrm implements INodeType {
 				});
 
 				if (response.status === 200) {
-					const data = response.data
+					const data = response.data;
 					for (const dt of data) {
 						returnData.push({
 							name: dt.text,
@@ -109,15 +119,16 @@ export class BcpCrm implements INodeType {
 						});
 					}
 				}
-				return returnData
+				return returnData;
 			},
+
 			async getPriorityLevels(this: ILoadOptionsFunctions) {
 				const returnData: INodePropertyOptions[] = [];
 				const credentials = await this.getCredentials('bcpApi');
-				// Get the current resource
+				const target = 'priority_level';
 
-				const method = 'GET'
-				let path = '/api/bizfly/crm/base-table/options?table=data_deal&target=priority_level';
+				const method = 'GET';
+				const path = `/api/bizfly/crm/base-table/options?table=data_deal&target=${target}`;
 
 				const response = await this.helpers.httpRequest({
 					method: method,
@@ -129,7 +140,7 @@ export class BcpCrm implements INodeType {
 				});
 
 				if (response.status === 200) {
-					const data = response.data
+					const data = response.data;
 					for (const dt of data) {
 						returnData.push({
 							name: dt.text,
@@ -137,15 +148,16 @@ export class BcpCrm implements INodeType {
 						});
 					}
 				}
-				return returnData
+				return returnData;
 			},
+
 			async getTypeDeals(this: ILoadOptionsFunctions) {
 				const returnData: INodePropertyOptions[] = [];
 				const credentials = await this.getCredentials('bcpApi');
-				// Get the current resource
+				const target = 'type_deal';
 
-				const method = 'GET'
-				let path = '/api/bizfly/crm/base-table/options?table=data_deal&target=type_deal';
+				const method = 'GET';
+				const path = `/api/bizfly/crm/base-table/options?table=data_deal&target=${target}`;
 
 				const response = await this.helpers.httpRequest({
 					method: method,
@@ -157,7 +169,7 @@ export class BcpCrm implements INodeType {
 				});
 
 				if (response.status === 200) {
-					const data = response.data
+					const data = response.data;
 					for (const dt of data) {
 						returnData.push({
 							name: dt.text,
@@ -165,7 +177,7 @@ export class BcpCrm implements INodeType {
 						});
 					}
 				}
-				return returnData
+				return returnData;
 			},
 
 		}
@@ -181,16 +193,21 @@ export class BcpCrm implements INodeType {
 		for (let i = 0; i < items.length; i++) {
 			try {
 				let responseData;
-				const additionalFields = this.getNodeParameter('additionalFields', i);
+				const additionalFields = this.getNodeParameter('additionalFields', i, {}) as IDataObject;
+				const rowId = this.getNodeParameter('rowId', i, '') as string;
 
 				const headers = {
 					'X-BCP-API-KEY': `${credentials.apiKey}`,
 				}
 
 				if (operation === 'create') {
+					if (resource === 'data_contact' || resource === 'data_lead') {
+						if (!additionalFields.name) {
+							throw new NodeOperationError(this.getNode(), 'The "Last Name" field is required for creating');
+						}
+					}
 					const method = 'POST'
 					const path = '/api/bizfly/crm/base-table'
-					// const path = '/api/bizfly/mail/automations/import'
 					const body = {
 						table: resource,
 						data: additionalFields,
@@ -201,6 +218,51 @@ export class BcpCrm implements INodeType {
 						url: `${credentials.baseUrl}${path}`,
 						headers: headers,
 						body: body,
+						json: true,
+					});
+				}
+
+				if (operation === 'update') {
+					const method = 'PUT'
+					const path = `/api/bizfly/crm/base-table/${rowId}`
+					const body = {
+						table: resource,
+						data: additionalFields,
+					}
+					// Replace with actual API call (e.g., axios.post)
+					responseData = await this.helpers.httpRequest({
+						method: method,
+						url: `${credentials.baseUrl}${path}`,
+						headers: headers,
+						body: body,
+						json: true,
+					});
+				}
+
+				if (operation === 'delete') {
+					const method = 'DELETE'
+					const path = `/api/bizfly/crm/base-table/${rowId}`
+					const body = {
+						table: resource
+					}
+					// Replace with actual API call (e.g., axios.post)
+					responseData = await this.helpers.httpRequest({
+						method: method,
+						url: `${credentials.baseUrl}${path}`,
+						headers: headers,
+						body: body,
+						json: true,
+					});
+				}
+
+				if (operation === 'get') {
+					const method = 'GET'
+					const path = `/api/bizfly/crm/base-table/detail/${rowId}?table=${resource}`;
+					// Replace with actual API call (e.g., axios.post)
+					responseData = await this.helpers.httpRequest({
+						method: method,
+						url: `${credentials.baseUrl}${path}`,
+						headers: headers,
 						json: true,
 					});
 				}

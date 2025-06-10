@@ -19,6 +19,18 @@ export const dealOperations: INodeProperties[] = [
 				action: 'Create a deal',
 			},
 			{
+				name: 'Delete',
+				value: 'delete',
+				description: 'Delete a deal',
+				action: 'Delete a deal',
+			},
+			{
+				name: 'Get',
+				value: 'get',
+				description: 'Get a deal',
+				action: 'Get a deal',
+			},
+			{
 				name: 'Update',
 				value: 'update',
 				description: 'Update deal properties',
@@ -30,9 +42,26 @@ export const dealOperations: INodeProperties[] = [
 ];
 
 export const dealFields: INodeProperties[] = [
+	/* -------------------------------------------------------------------------- */
+	/*                                  deal:get                               */
+	/* -------------------------------------------------------------------------- */
+	{
+		displayName: 'Deal ID',
+		name: 'rowId',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['data_deal'],
+				operation: ['get'],
+			},
+		},
+		default: '',
+		description: 'Unique identifier for a particular company',
+	},
 
 	/* -------------------------------------------------------------------------- */
-	/*                                contact:create                               */
+	/*                                deal:create                               */
 	/* -------------------------------------------------------------------------- */
 
 	{
@@ -119,11 +148,29 @@ export const dealFields: INodeProperties[] = [
 	},
 
 	/* -------------------------------------------------------------------------- */
-	/*                                contact:update                               */
+	/*                                  deal:delete                               */
 	/* -------------------------------------------------------------------------- */
 	{
-		displayName: 'Contact ID',
-		name: 'contactId',
+		displayName: 'Deal ID',
+		name: 'rowId',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['data_deal'],
+				operation: ['delete'],
+			},
+		},
+		default: '',
+		description: 'ID of deal to delete',
+	},
+
+	/* -------------------------------------------------------------------------- */
+	/*                                deal:update                               */
+	/* -------------------------------------------------------------------------- */
+	{
+		displayName: 'Deal ID',
+		name: 'rowId',
 		type: 'string',
 		required: true,
 		displayOptions: {
@@ -133,7 +180,7 @@ export const dealFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'Unique identifier for a particular contact',
+		description: 'Unique identifier for a particular deal',
 	},
 	{
 		displayName: 'Additional Fields',
@@ -149,13 +196,6 @@ export const dealFields: INodeProperties[] = [
 		},
 		options: [
 			{
-				displayName: 'Address',
-				name: 'address',
-				type: 'string',
-				default: '',
-				description: 'Contact address',
-			},
-			{
 				displayName: 'Company Names or ID',
 				name: 'account',
 				type: 'multiOptions',
@@ -167,35 +207,59 @@ export const dealFields: INodeProperties[] = [
 				description: 'Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 			},
 			{
-				displayName: 'Email',
-				name: 'emails',
-				type: 'string',
-				placeholder: 'name@email.com',
-				default: '',
-				description: 'Contact email',
+				displayName: 'Expected Value',
+				name: 'amount',
+				type: 'number',
+				default: 0,
+				description: 'Deal expected value',
 			},
 			{
-				displayName: 'First Name',
-				name: 'surname',
-				type: 'string',
-				default: '',
-				description: 'Contact first name',
-			},
-			{
-				displayName: 'Last Name',
+				displayName: 'Name',
 				name: 'name',
 				type: 'string',
 				default: '',
-				description: 'Contact last name',
+				description: 'Deal name',
 			},
 			{
-				displayName: 'Phone',
-				name: 'phones',
-				type: 'string',
-				default: '',
-				description: 'Contact phone',
+				displayName: 'Pipeline Name or ID',
+				name: 'pipeline',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getPipelines',
+					loadOptionsDependsOn: ['resource'],
+				},
+				default: '', // The initially selected option
+				description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 			},
-
+			{
+				displayName: 'Priority Level Name or ID',
+				name: 'priority_level',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getPriorityLevels',
+					loadOptionsDependsOn: ['resource'],
+				},
+				default: '', // The initially selected option
+				description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+			},
+			{
+				displayName: 'Signing Date',
+				name: 'signing_date',
+				type: 'dateTime',
+				default: '',
+				description: 'Deal signing date',
+			},
+			{
+				displayName: 'Type Name or ID',
+				name: 'type_deal',
+				type: 'options',
+				typeOptions: {
+					loadOptionsMethod: 'getTypeDeals',
+					loadOptionsDependsOn: ['resource'],
+				},
+				default: '', // The initially selected option
+				description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+			},
 		],
 	},
 ];
