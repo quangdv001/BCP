@@ -57,7 +57,7 @@ export const dealFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'Unique identifier for a particular company',
+		description: 'Unique identifier for a particular deal',
 	},
 
 	/* -------------------------------------------------------------------------- */

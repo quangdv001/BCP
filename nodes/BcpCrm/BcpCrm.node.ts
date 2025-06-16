@@ -13,6 +13,7 @@ import { contactFields, contactOperations } from './descriptions/ContactDescript
 import { companyFields, companyOperations } from './descriptions/CompanyDescription';
 import { dealFields, dealOperations } from './descriptions/DealDescription';
 import { leadFields, leadOperations } from './descriptions/LeadDescription';
+import { ticketFields, ticketOperations } from './descriptions/TicketDescription';
 
 export class BcpCrm implements INodeType {
 	// @ts-ignore
@@ -45,6 +46,7 @@ export class BcpCrm implements INodeType {
 					{name: 'Contact', value: 'data_contact'},
 					{name: 'Deal', value: 'data_deal'},
 					{name: 'Lead', value: 'data_lead'},
+					{name: 'Ticket', value: 'ticket'},
 				],
 				default: 'data_account',
 			},
@@ -60,6 +62,9 @@ export class BcpCrm implements INodeType {
 			// LEAD
 			...leadOperations,
 			...leadFields,
+			// TICKET
+			...ticketOperations,
+			...ticketFields,
 		],
 	};
 
@@ -179,6 +184,59 @@ export class BcpCrm implements INodeType {
 				}
 				return returnData;
 			},
+			async getTicketTypes(this: ILoadOptionsFunctions) {
+				const returnData: INodePropertyOptions[] = [];
+				const credentials = await this.getCredentials('bcpApi');
+
+				const method = 'GET';
+				const path = `/api/bizfly/ticket/types`;
+
+				const response = await this.helpers.httpRequest({
+					method: method,
+					url: `${credentials.baseUrl}${path}`,
+					headers: {
+						'X-BCP-API-KEY': `${credentials.apiKey}`,
+					},
+					json: true,
+				});
+
+				for (const dt of response) {
+					returnData.push({
+						name: dt.name,
+						value: dt._id,
+					});
+				}
+
+				return returnData;
+			},
+			async getUsers(this: ILoadOptionsFunctions) {
+				const returnData: INodePropertyOptions[] = [];
+				const credentials = await this.getCredentials('bcpApi');
+
+				const method = 'GET';
+				const path = `/api/bizfly/bcp/users`;
+
+				const response = await this.helpers.httpRequest({
+					method: method,
+					url: `${credentials.baseUrl}${path}`,
+					headers: {
+						'X-BCP-API-KEY': `${credentials.apiKey}`,
+					},
+					json: true,
+				});
+
+				if (response.success) {
+					const data = response.data;
+					for (const dt of data) {
+						returnData.push({
+							name: `${dt.name} (${dt.email})`,
+							value: dt.id,
+						});
+					}
+				}
+				return returnData;
+
+			},
 
 		}
 	};
@@ -195,23 +253,44 @@ export class BcpCrm implements INodeType {
 				let responseData;
 				const additionalFields = this.getNodeParameter('additionalFields', i, {}) as IDataObject;
 				const rowId = this.getNodeParameter('rowId', i, '') as string;
+				const typeId = this.getNodeParameter('type_id', i, '') as string;
+				const linkedResource = this.getNodeParameter('linked_resource', i, '') as string;
+				const linkedId = this.getNodeParameter('linked_id', i, '') as string;
 
 				const headers = {
 					'X-BCP-API-KEY': `${credentials.apiKey}`,
 				}
 
 				if (operation === 'create') {
+					const method = 'POST'
+					let path = '/api/bizfly/crm/base-table'
+					let body = {
+						table: resource,
+						data: additionalFields,
+					}
 					if (resource === 'data_contact' || resource === 'data_lead') {
 						if (!additionalFields.name) {
 							throw new NodeOperationError(this.getNode(), 'The "Last Name" field is required for creating');
 						}
 					}
-					const method = 'POST'
-					const path = '/api/bizfly/crm/base-table'
-					const body = {
-						table: resource,
-						data: additionalFields,
+					if (resource === 'ticket') {
+						if (!additionalFields.name) {
+							throw new NodeOperationError(this.getNode(), 'The "Name" field is required for creating');
+						}
+
+						path = '/api/bizfly/ticket';
+						let data = additionalFields;
+						data.type_id = typeId;
+						data.data_crm = {
+							table: linkedResource,
+							id: linkedId,
+						}
+						body = {
+							table: resource,
+							data: data,
+						}
 					}
+
 					// Replace with actual API call (e.g., axios.post)
 					responseData = await this.helpers.httpRequest({
 						method: method,
@@ -224,10 +303,24 @@ export class BcpCrm implements INodeType {
 
 				if (operation === 'update') {
 					const method = 'PUT'
-					const path = `/api/bizfly/crm/base-table/${rowId}`
-					const body = {
+					let path = `/api/bizfly/crm/base-table/${rowId}`
+					let body = {
 						table: resource,
 						data: additionalFields,
+					}
+
+					if (resource === 'ticket') {
+						path = `/api/bizfly/ticket/${rowId}`;
+						let data = additionalFields;
+						data.type_id = typeId;
+						data.data_crm = {
+							table: linkedResource,
+							id: linkedId,
+						}
+						body = {
+							table: resource,
+							data: data,
+						}
 					}
 					// Replace with actual API call (e.g., axios.post)
 					responseData = await this.helpers.httpRequest({
@@ -241,7 +334,10 @@ export class BcpCrm implements INodeType {
 
 				if (operation === 'delete') {
 					const method = 'DELETE'
-					const path = `/api/bizfly/crm/base-table/${rowId}`
+					let path = `/api/bizfly/crm/base-table/${rowId}`
+					if (resource === 'ticket') {
+						path = `/api/bizfly/ticket/${rowId}`;
+					}
 					const body = {
 						table: resource
 					}
@@ -257,7 +353,10 @@ export class BcpCrm implements INodeType {
 
 				if (operation === 'get') {
 					const method = 'GET'
-					const path = `/api/bizfly/crm/base-table/detail/${rowId}?table=${resource}`;
+					let path = `/api/bizfly/crm/base-table/detail/${rowId}?table=${resource}`;
+					if (resource === 'ticket') {
+						path = `/api/bizfly/ticket/show/${rowId}`;
+					}
 					// Replace with actual API call (e.g., axios.post)
 					responseData = await this.helpers.httpRequest({
 						method: method,

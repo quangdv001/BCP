@@ -58,7 +58,7 @@ export const leadFields: INodeProperties[] = [
 			},
 		},
 		default: '',
-		description: 'Unique identifier for a particular company',
+		description: 'Unique identifier for a particular lead',
 	},
 
 	/* -------------------------------------------------------------------------- */

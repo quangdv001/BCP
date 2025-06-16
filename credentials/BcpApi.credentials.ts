@@ -1,5 +1,6 @@
 import {
 	IAuthenticateGeneric,
+	ICredentialTestRequest,
 	ICredentialType,
 	INodeProperties,
 } from 'n8n-workflow';
@@ -14,9 +15,19 @@ export class BcpApi implements ICredentialType {
 		{
 			displayName: 'Base URL',
 			name: 'baseUrl',
-			type: 'string',
-			default: 'https://api.onestop.bizdev.vn',
+			type: 'options',
 			required: true,
+			options: [
+				{
+					name: 'Production',
+					value: 'https://api.bcp.bizfly.vn',
+				},
+				{
+					name: 'Development',
+					value: 'https://api.onestop.bizdev.vn',
+				},
+			],
+			default: 'https://api.bcp.bizfly.vn', // The initially selected option
 		},
 		{
 			displayName: 'API Key',
@@ -32,6 +43,15 @@ export class BcpApi implements ICredentialType {
 	authenticate: IAuthenticateGeneric = {
 		type: 'generic',
 		properties: {
+			headers: {
+				'X-BCP-API-KEY': '={{$credentials.apiKey}}',
+			},
+		},
+	};
+	test: ICredentialTestRequest = {
+		request: {
+			baseURL: '={{$credentials?.baseUrl}}',
+			url: '/api/bizfly/bcp/test',
 			headers: {
 				'X-BCP-API-KEY': '={{$credentials.apiKey}}',
 			},
