@@ -27,7 +27,7 @@ export class BcpApi implements ICredentialType {
 					value: 'https://api.onestop.bizdev.vn',
 				},
 			],
-			default: 'https://api.bcp.bizfly.vn', // The initially selected option
+			default: 'https://api.onestop.bizdev.vn', // The initially selected option
 		},
 		{
 			displayName: 'API Key',
