@@ -361,7 +361,7 @@ export class BcpMail implements INodeType {
 							'X-BCP-API-KEY': `${credentials.apiKey}`,
 						},
 						json: true,
-					});1
+					});
 					if (response.success === true) {
 						const data = response.data
 						for (const dt of data) {

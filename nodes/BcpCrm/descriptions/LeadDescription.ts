@@ -13,6 +13,17 @@ export const leadOperations: INodeProperties[] = [
 		},
 		options: [
 			{
+				name: 'Apply Filter',
+				value: 'filter',
+				description: 'Apply leads to filters',
+				action: 'Apply leads to filters',
+			},
+			{
+				name: 'Assign Lead to Sales Rep',
+				value: 'assign',
+				action: 'Assign lead to sales rep',
+			},
+			{
 				name: 'Create',
 				value: 'create',
 				description: 'Create a new lead',
@@ -29,6 +40,12 @@ export const leadOperations: INodeProperties[] = [
 				value: 'get',
 				description: 'Get a lead',
 				action: 'Get a lead',
+			},
+			{
+				name: 'Get By Filter',
+				value: 'getList',
+				description: 'Get leads by list',
+				action: 'Get leads by list',
 			},
 			{
 				name: 'Update',
@@ -59,6 +76,159 @@ export const leadFields: INodeProperties[] = [
 		},
 		default: '',
 		description: 'Unique identifier for a particular lead',
+	},
+
+	/* -------------------------------------------------------------------------- */
+	/*                                  lead:filter                            */
+	/* -------------------------------------------------------------------------- */
+	{
+		displayName: 'Filter Name or ID',
+		name: 'filter_ids',
+		type: 'options',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['data_lead'],
+				operation: ['filter'],
+			},
+		},
+		typeOptions: {
+			loadOptionsMethod: 'getFilters',
+			loadOptionsDependsOn: ['resource'],
+		},
+		default: '', // Initially selected options
+		description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+	},
+	{
+		displayName: 'Lead IDs',
+		name: 'rowIds',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['data_lead'],
+				operation: ['filter'],
+			},
+		},
+		default: '',
+		description: 'Unique identifier for a particular lead',
+	},
+
+	/* -------------------------------------------------------------------------- */
+	/*                                  lead:getList                              */
+	/* -------------------------------------------------------------------------- */
+	{
+		displayName: 'Filter Name or ID',
+		name: 'filter_id',
+		type: 'options',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['data_lead'],
+				operation: ['getList'],
+			},
+		},
+		typeOptions: {
+			loadOptionsMethod: 'getFilters',
+			loadOptionsDependsOn: ['resource'],
+		},
+		default: '', // Initially selected options
+		description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+	},
+
+	/* -------------------------------------------------------------------------- */
+	/*                                  lead:assign                            */
+	/* -------------------------------------------------------------------------- */
+	{
+		displayName: 'Lead IDs',
+		name: 'rowIds',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['data_lead'],
+				operation: ['assign'],
+			},
+		},
+		default: '',
+		description: 'Unique identifier for a particular lead',
+	},
+	{
+		displayName: 'Type Assign Name or ID',
+		name: 'assign_type',
+		type: 'options',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['data_lead'],
+				operation: ['assign'],
+			},
+		},
+		options: [
+			{name: 'Equal', value: 'equal'},
+			{name: 'Random', value: 'random'},
+		],
+		default: 'equal', // Initially selected options
+		description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+	},
+	{
+		displayName: 'Sale Names or IDs',
+		name: 'sales_list',
+		type: 'multiOptions',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['data_lead'],
+				operation: ['assign'],
+				assign_type: ['equal'],
+			},
+		},
+		typeOptions: {
+			loadOptionsMethod: 'getSales',
+			loadOptionsDependsOn: ['resource'],
+		},
+		default: [], // Initially selected options
+		description: 'Choose from the list, or specify IDs using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+	},
+	{
+		displayName: 'Lead Assignment Weight',
+		name: 'sales',
+		type: 'fixedCollection',
+		typeOptions: {
+			multipleValues: true,
+		},
+		displayOptions: {
+			show: {
+				resource: ['data_lead'],
+				operation: ['assign'],
+				assign_type: ['random'],
+			},
+		},
+		default: {},
+		options: [
+			{
+				name: 'sale',
+				displayName: 'Sale',
+				values: [
+					{
+						displayName: 'Sale Name or ID',
+						name: 'key',
+						type: 'options',
+						description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+						typeOptions: {
+							loadOptionsMethod: 'getSales',
+						},
+						default: '',
+					},
+					{
+						displayName: 'Sale Rep Weight',
+						name: 'value',
+						type: 'number',
+						default: 0,
+					},
+				],
+			},
+		],
 	},
 
 	/* -------------------------------------------------------------------------- */

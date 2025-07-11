@@ -13,6 +13,12 @@ export const contactOperations: INodeProperties[] = [
 		},
 		options: [
 			{
+				name: 'Apply Filter',
+				value: 'filter',
+				description: 'Apply contacts to filters',
+				action: 'Apply contacts to filters',
+			},
+			{
 				name: 'Create',
 				value: 'create',
 				description: 'Create a new contact',
@@ -29,6 +35,12 @@ export const contactOperations: INodeProperties[] = [
 				value: 'get',
 				description: 'Get a contact',
 				action: 'Get a contact',
+			},
+			{
+				name: 'Get By Filter',
+				value: 'getList',
+				description: 'Get contacts by list',
+				action: 'Get contacts by list',
 			},
 			{
 				name: 'Update',
@@ -58,6 +70,64 @@ export const contactFields: INodeProperties[] = [
 		},
 		default: '',
 		description: 'Unique identifier for a particular contact',
+	},
+
+	/* -------------------------------------------------------------------------- */
+	/*                                  contact:filter                            */
+	/* -------------------------------------------------------------------------- */
+	{
+		displayName: 'Filter Name or ID',
+		name: 'filter_ids',
+		type: 'options',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['data_contact'],
+				operation: ['filter'],
+			},
+		},
+		typeOptions: {
+			loadOptionsMethod: 'getFilters',
+			loadOptionsDependsOn: ['resource'],
+		},
+		default: '', // Initially selected options
+		description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+	},
+	{
+		displayName: 'Contact IDs',
+		name: 'rowIds',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['data_contact'],
+				operation: ['filter'],
+			},
+		},
+		default: '',
+		description: 'Unique identifier for a particular contact',
+	},
+
+	/* -------------------------------------------------------------------------- */
+	/*                                  contact:getList                              */
+	/* -------------------------------------------------------------------------- */
+	{
+		displayName: 'Filter Name or ID',
+		name: 'filter_id',
+		type: 'options',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['data_contact'],
+				operation: ['getList'],
+			},
+		},
+		typeOptions: {
+			loadOptionsMethod: 'getFilters',
+			loadOptionsDependsOn: ['resource'],
+		},
+		default: '', // Initially selected options
+		description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 	},
 
 	/* -------------------------------------------------------------------------- */

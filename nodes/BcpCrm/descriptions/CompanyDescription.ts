@@ -13,6 +13,12 @@ export const companyOperations: INodeProperties[] = [
 		},
 		options: [
 			{
+				name: 'Apply Filter',
+				value: 'filter',
+				description: 'Apply companies to filters',
+				action: 'Apply companies to filters',
+			},
+			{
 				name: 'Create',
 				value: 'create',
 				description: 'Create a new company',
@@ -29,6 +35,12 @@ export const companyOperations: INodeProperties[] = [
 				value: 'get',
 				description: 'Get a company',
 				action: 'Get a company',
+			},
+			{
+				name: 'Get By Filter',
+				value: 'getList',
+				description: 'Get companies by filter',
+				action: 'Get companies by filter',
 			},
 			{
 				name: 'Update',
@@ -61,7 +73,65 @@ export const companyFields: INodeProperties[] = [
 	},
 
 	/* -------------------------------------------------------------------------- */
-	/*                                company:create                               */
+	/*                                  company:filter                            */
+	/* -------------------------------------------------------------------------- */
+	{
+		displayName: 'Filter Name or ID',
+		name: 'filter_ids',
+		type: 'options',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['data_account'],
+				operation: ['filter'],
+			},
+		},
+		typeOptions: {
+			loadOptionsMethod: 'getFilters',
+			loadOptionsDependsOn: ['resource'],
+		},
+		default: '', // Initially selected options
+		description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+	},
+	{
+		displayName: 'Company IDs',
+		name: 'rowIds',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['data_account'],
+				operation: ['filter'],
+			},
+		},
+		default: '',
+		description: 'Unique identifier for a particular company',
+	},
+
+	/* -------------------------------------------------------------------------- */
+	/*                                  company:getList                           */
+	/* -------------------------------------------------------------------------- */
+	{
+		displayName: 'Filter Name or ID',
+		name: 'filter_id',
+		type: 'options',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['data_account'],
+				operation: ['getList'],
+			},
+		},
+		typeOptions: {
+			loadOptionsMethod: 'getFilters',
+			loadOptionsDependsOn: ['resource'],
+		},
+		default: '', // Initially selected options
+		description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+	},
+
+	/* -------------------------------------------------------------------------- */
+	/*                                company:create                              */
 	/* -------------------------------------------------------------------------- */
 	{
 		displayName: 'Additional Fields',

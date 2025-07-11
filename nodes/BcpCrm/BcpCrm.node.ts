@@ -235,6 +235,62 @@ export class BcpCrm implements INodeType {
 					}
 				}
 				return returnData;
+			},
+			async getFilters(this: ILoadOptionsFunctions) {
+				const returnData: INodePropertyOptions[] = [];
+				const credentials = await this.getCredentials('bcpApi');
+				const resource = this.getNodeParameter('resource', 0) as string;
+
+				const method = 'GET';
+				const path = `/api/bizfly/crm/base-table/filters?table=${resource}`;
+
+				const response = await this.helpers.httpRequest({
+					method: method,
+					url: `${credentials.baseUrl}${path}`,
+					headers: {
+						'X-BCP-API-KEY': `${credentials.apiKey}`,
+					},
+					json: true,
+				});
+
+				if (response.success) {
+					const data = response.data;
+					for (const dt of data) {
+						returnData.push({
+							name: `${dt.name}`,
+							value: dt.id,
+						});
+					}
+				}
+				return returnData;
+
+			},
+			async getSales(this: ILoadOptionsFunctions) {
+				const returnData: INodePropertyOptions[] = [];
+				const credentials = await this.getCredentials('bcpApi');
+
+				const method = 'GET';
+				const path = `/api/bizfly/crm/base-table/sales`;
+
+				const response = await this.helpers.httpRequest({
+					method: method,
+					url: `${credentials.baseUrl}${path}`,
+					headers: {
+						'X-BCP-API-KEY': `${credentials.apiKey}`,
+					},
+					json: true,
+				});
+
+				if (response.success) {
+					const data = response.data;
+					for (const dt of data) {
+						returnData.push({
+							name: `${dt.name} (${dt.text})`,
+							value: dt.id,
+						});
+					}
+				}
+				return returnData;
 
 			},
 
@@ -242,12 +298,17 @@ export class BcpCrm implements INodeType {
 	};
 
 
-	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
+	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][] | null> {
 		const items = this.getInputData()
-		const returnData: INodeExecutionData[] = []
 		const resource = this.getNodeParameter('resource', 0) as string
 		const operation = this.getNodeParameter('operation', 0) as string
 		const credentials = await this.getCredentials('bcpApi')
+		let returnData = [];
+		const ids = [];
+		const filterIds = this.getNodeParameter('filter_ids', 0, '') as string;
+		const headers = {
+			'X-BCP-API-KEY': `${credentials.apiKey}`,
+		}
 		for (let i = 0; i < items.length; i++) {
 			try {
 				let responseData;
@@ -256,10 +317,9 @@ export class BcpCrm implements INodeType {
 				const typeId = this.getNodeParameter('type_id', i, '') as string;
 				const linkedResource = this.getNodeParameter('linked_resource', i, '') as string;
 				const linkedId = this.getNodeParameter('linked_id', i, '') as string;
-
-				const headers = {
-					'X-BCP-API-KEY': `${credentials.apiKey}`,
-				}
+				const filterId = this.getNodeParameter('filter_id', i, '') as string;
+				const rowIds = this.getNodeParameter('rowIds', i, '') as string;
+				ids.push(rowIds)
 
 				if (operation === 'create') {
 					const method = 'POST'
@@ -299,6 +359,14 @@ export class BcpCrm implements INodeType {
 						body: body,
 						json: true,
 					});
+
+					if (responseData.success || responseData.status === 200) {
+						if (Array.isArray(responseData.data)) {
+							returnData.push(...responseData.data);
+						} else {
+							returnData.push(responseData.data);
+						}
+					}
 				}
 
 				if (operation === 'update') {
@@ -330,6 +398,13 @@ export class BcpCrm implements INodeType {
 						body: body,
 						json: true,
 					});
+					if (responseData.success || responseData.status === 200) {
+						if (Array.isArray(responseData.data)) {
+							returnData.push(...responseData.data);
+						} else {
+							returnData.push(responseData.data);
+						}
+					}
 				}
 
 				if (operation === 'delete') {
@@ -349,6 +424,11 @@ export class BcpCrm implements INodeType {
 						body: body,
 						json: true,
 					});
+					if (Array.isArray(responseData.data)) {
+						returnData.push(...responseData.data);
+					} else {
+						returnData.push(responseData.data);
+					}
 				}
 
 				if (operation === 'get') {
@@ -364,10 +444,38 @@ export class BcpCrm implements INodeType {
 						headers: headers,
 						json: true,
 					});
+
+					if (responseData.success) {
+						if (Array.isArray(responseData.data)) {
+							returnData.push(...responseData.data);
+						} else {
+							returnData.push(responseData.data);
+						}
+					}
 				}
 
-				// @ts-ignore
-				returnData.push({json: responseData});
+				if (operation === 'getList') {
+					const method = 'GET'
+					let path = `/api/bizfly/crm/base-table/filters/data?table=${resource}&filter_id=${filterId}`;
+					// Replace with actual API call (e.g., axios.post)
+					responseData = await this.helpers.httpRequest({
+						method: method,
+						url: `${credentials.baseUrl}${path}`,
+						headers: headers,
+						json: true,
+					});
+
+					// @ts-ignore
+					if (responseData.success) {
+						if (Array.isArray(responseData.data)) {
+							returnData.push(...responseData.data);
+						} else {
+							returnData.push(responseData.data);
+						}
+					}
+				}
+
+
 			} catch (error) {
 				if (this.continueOnFail()) {
 					returnData.push({json: {error: error.message}, error});
@@ -377,6 +485,80 @@ export class BcpCrm implements INodeType {
 			}
 		}
 
-		return [returnData];
+		if (operation === 'filter') {
+			const method = 'GET';
+
+			// Build query parameters manually
+			let queryParams = `table=${encodeURIComponent(resource)}`;
+
+			// Add filter_ids as separate parameters
+			queryParams += `&filter_id=${encodeURIComponent(filterIds)}`;
+
+			// Add ids as separate parameters
+			ids.forEach(id => {
+				queryParams += `&ids[]=${encodeURIComponent(id)}`;
+			});
+
+			let path = `/api/bizfly/crm/base-table/filters/apply?${queryParams}`;
+
+			let responseData = await this.helpers.httpRequest({
+				method: method,
+				url: `${credentials.baseUrl}${path}`,
+				headers: headers,
+				json: true,
+			});
+			if (responseData.success) {
+				if (Array.isArray(responseData.data)) {
+					returnData.push(...responseData.data);
+				} else {
+					returnData.push(responseData.data);
+				}
+			}
+		}
+
+		if (operation === 'assign') {
+			const rawMergeFields = this.getNodeParameter('sales', 0, {}) as {
+				sale?: Array<{ key: string; value: number }>;
+			};
+			const mergeFields = rawMergeFields.sale ?? [];
+			const sales = Object.fromEntries(
+				mergeFields.map(f => [f.key, f.value])
+			);
+			const saleIds = this.getNodeParameter('sales_list', 0, []) as Array<String>;
+			const nodeId = this.getNode().id;
+			const method = 'POST';
+			const mode = this.getNodeParameter('assign_type', 0, 'equal') as string;
+			let path = `/api/bizfly/crm/base-table/sales/assign`;
+			const body = {
+				table: resource,
+				ids: ids,
+				sale_ids: saleIds,
+				sales: sales,
+				mode: mode,
+				node_id: nodeId,
+			}
+
+			let responseData = await this.helpers.httpRequest({
+				method: method,
+				url: `${credentials.baseUrl}${path}`,
+				headers: headers,
+				body: body,
+				json: true,
+			});
+			if (responseData.success) {
+				if (Array.isArray(responseData.data)) {
+					returnData.push(...responseData.data);
+				} else {
+					returnData.push(responseData.data);
+				}
+			}
+		}
+
+		if (Array.isArray(returnData) && returnData.length !== 0) {
+			return [this.helpers.returnJsonArray(returnData)];
+		}
+
+		// Default return if no conditions are met
+		return null;
 	}
 }

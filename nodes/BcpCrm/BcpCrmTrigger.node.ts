@@ -37,6 +37,7 @@ export class BcpCrmTrigger implements INodeType {
 					{name: 'Contact', value: 'data_contact'},
 					{name: 'Deal', value: 'data_deal'},
 					{name: 'Lead', value: 'data_lead'},
+					{name: 'Ticket', value: 'ticket'},
 				],
 				default: 'data_account',
 			},
@@ -90,7 +91,7 @@ export class BcpCrmTrigger implements INodeType {
 		const table = this.getNodeParameter('table', 0) as string;
 		const event = this.getNodeParameter('event', 0) as string;
 		const limit = this.getNodeParameter('limit', 0) as string;
-		const returnData: INodeExecutionData[] = [];
+		let returnData = [];
 
 		// Get credentials for API request
 		const credentials = await this.getCredentials('bcpApi');
@@ -102,7 +103,10 @@ export class BcpCrmTrigger implements INodeType {
 
 			// Make API request to get records from the selected table
 			const method = 'GET';
-			const path = `/api/bizfly/crm/base-table/polling`;
+			let path = `/api/bizfly/crm/base-table/polling`;
+			if (table === 'ticket') {
+				path = `/api/bizfly/ticket/polling`;
+			}
 
 			const response = await this.helpers.httpRequest({
 				method: method,
@@ -119,19 +123,26 @@ export class BcpCrmTrigger implements INodeType {
 				json: true,
 			});
 
-			// // Process response data
-			if (response.success) {
+			// Process response data
+			if (response.success && response.data && Array.isArray(response.data)) {
 				// Update the last timestamp
 				workflowStaticData.lastTimestamp = currentTimestamp;
+
+				// Add each item from response.data to returnData
+				returnData.push(...response.data);
 			}
-			returnData.push({json: response});
 
 			// If no data was found, return null (no trigger)
 			if (returnData.length === 0) {
 				return null;
 			}
 
-			return [returnData];
+			if (Array.isArray(returnData) && returnData.length !== 0) {
+				return [this.helpers.returnJsonArray(returnData)];
+			}
+
+			// Default return if no conditions are met
+			return null;
 		} catch (error) {
 			// Handle any errors
 			// Return null instead of error to prevent constant error notifications

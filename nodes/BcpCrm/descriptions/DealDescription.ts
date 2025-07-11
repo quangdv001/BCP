@@ -13,6 +13,12 @@ export const dealOperations: INodeProperties[] = [
 		},
 		options: [
 			{
+				name: 'Apply Filter',
+				value: 'filter',
+				description: 'Apply deals to filters',
+				action: 'Apply deals to filters',
+			},
+			{
 				name: 'Create',
 				value: 'create',
 				description: 'Create a new deal',
@@ -29,6 +35,12 @@ export const dealOperations: INodeProperties[] = [
 				value: 'get',
 				description: 'Get a deal',
 				action: 'Get a deal',
+			},
+			{
+				name: 'Get By Filter',
+				value: 'getList',
+				description: 'Get deals by list',
+				action: 'Get deals by list',
 			},
 			{
 				name: 'Update',
@@ -58,6 +70,64 @@ export const dealFields: INodeProperties[] = [
 		},
 		default: '',
 		description: 'Unique identifier for a particular deal',
+	},
+
+	/* -------------------------------------------------------------------------- */
+	/*                                  deal:filter                            */
+	/* -------------------------------------------------------------------------- */
+	{
+		displayName: 'Filter Name or ID',
+		name: 'filter_ids',
+		type: 'options',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['data_deal'],
+				operation: ['filter'],
+			},
+		},
+		typeOptions: {
+			loadOptionsMethod: 'getFilters',
+			loadOptionsDependsOn: ['resource'],
+		},
+		default: '', // Initially selected options
+		description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+	},
+	{
+		displayName: 'Deal IDs',
+		name: 'rowIds',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['data_deal'],
+				operation: ['filter'],
+			},
+		},
+		default: '',
+		description: 'Unique identifier for a particular deal',
+	},
+
+	/* -------------------------------------------------------------------------- */
+	/*                                  deal:getList                              */
+	/* -------------------------------------------------------------------------- */
+	{
+		displayName: 'Filter Name or ID',
+		name: 'filter_id',
+		type: 'options',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['data_deal'],
+				operation: ['getList'],
+			},
+		},
+		typeOptions: {
+			loadOptionsMethod: 'getFilters',
+			loadOptionsDependsOn: ['resource'],
+		},
+		default: '', // Initially selected options
+		description: 'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
 	},
 
 	/* -------------------------------------------------------------------------- */
